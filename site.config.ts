@@ -10,7 +10,7 @@ export default siteConfig({
 
   // basic site info (required)
   name: 'Harshit Mishra | Portfolio',
-  domain: 'harshitmishra.tech',
+  domain: 'harshitmishra.dev',
   author: 'Harshit Mishra',
 
   // open graph metadata (optional)
