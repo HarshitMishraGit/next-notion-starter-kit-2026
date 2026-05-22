@@ -226,10 +226,18 @@ export function NotionPage({
   const keys = Object.keys(recordMap?.block || {})
   const block = getBlockValue(recordMap?.block?.[keys[0]!])
 
-  // const isRootPage =
-  //   parsePageId(block?.id) === parsePageId(site?.rootNotionPageId)
+  // isBlogPost: page is a direct child of a Notion collection (database).
+  // Used for table-of-contents / sidebar display logic.
   const isBlogPost =
     block?.type === 'page' && block?.parent_table === 'collection'
+
+  // isArticle: SEO type. Default is "article" for every page except:
+  //   - the homepage (always "website")
+  //   - pages with the Notion "Is Website" checkbox checked
+  const isHomePage = pageId === site?.rootNotionPageId
+  const isArticle =
+    !isHomePage &&
+    getPageProperty<boolean>('Is Website', block!, recordMap!) !== true
 
   const showTableOfContents = !!isBlogPost
   const minTableOfContentsItems = 3
@@ -286,6 +294,32 @@ export function NotionPage({
     getPageProperty<string>('Description', block, recordMap) ||
     config.description
 
+  // Article-specific metadata (only used when isArticle = true)
+  const rawTags = getPageProperty<string | string[]>('Tags', block, recordMap)
+  const articleTags: string[] = rawTags
+    ? Array.isArray(rawTags)
+      ? (rawTags as string[])
+      : String(rawTags)
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean)
+    : []
+
+  const articleSection =
+    getPageProperty<string>('Section', block, recordMap) || undefined
+
+  const publishedTimestamp = getPageProperty<number>(
+    'Published',
+    block,
+    recordMap
+  )
+  const datePublished = publishedTimestamp
+    ? new Date(publishedTimestamp).toISOString()
+    : undefined
+  const dateModified = block?.last_edited_time
+    ? new Date(block.last_edited_time).toISOString()
+    : datePublished
+
   return (
     <>
       <PageHead
@@ -295,7 +329,11 @@ export function NotionPage({
         description={socialDescription}
         image={socialImage}
         url={canonicalPageUrl}
-        isBlogPost={isBlogPost}
+        isArticle={isArticle}
+        articleTags={articleTags}
+        articleSection={articleSection}
+        datePublished={datePublished}
+        dateModified={dateModified}
       />
 
       {isLiteMode && <BodyClassName className='notion-lite' />}

@@ -11,13 +11,21 @@ export function PageHead({
   pageId,
   image,
   url,
-  isBlogPost
+  isArticle,
+  articleTags,
+  articleSection,
+  datePublished,
+  dateModified
 }: types.PageProps & {
   title?: string
   description?: string
   image?: string
   url?: string
-  isBlogPost?: boolean
+  isArticle?: boolean
+  articleTags?: string[]
+  articleSection?: string
+  datePublished?: string
+  dateModified?: string
 }) {
   const rssFeedUrl = `${config.host}/feed`
 
@@ -25,6 +33,9 @@ export function PageHead({
   description = description ?? site?.description
 
   const socialImageUrl = getSocialImageUrl(pageId) || image
+  const authorUrl = config.linkedin
+    ? `https://www.linkedin.com/in/${config.linkedin}`
+    : undefined
 
   return (
     <Head>
@@ -52,7 +63,10 @@ export function PageHead({
       />
 
       <meta name='robots' content='index,follow' />
-      <meta property='og:type' content='website' />
+      <meta
+        property='og:type'
+        content={isArticle ? 'article' : 'website'}
+      />
 
       {site && (
         <>
@@ -102,8 +116,30 @@ export function PageHead({
       <meta name='twitter:title' content={title} />
       <title>{title}</title>
 
-      {/* Better SEO for the blog posts */}
-      {isBlogPost && (
+      {/* Article-specific Open Graph tags */}
+      {isArticle && (
+        <>
+          {authorUrl && (
+            <meta property='article:author' content={authorUrl} />
+          )}
+          <meta
+            property='article:section'
+            content={articleSection || 'Technology'}
+          />
+          {datePublished && (
+            <meta property='article:published_time' content={datePublished} />
+          )}
+          {dateModified && (
+            <meta property='article:modified_time' content={dateModified} />
+          )}
+          {articleTags?.map((tag) => (
+            <meta key={tag} property='article:tag' content={tag} />
+          ))}
+        </>
+      )}
+
+      {/* Structured data — NewsArticle schema for article pages */}
+      {isArticle && (
         <script type='application/ld+json'>
           {JSON.stringify({
             '@context': 'https://schema.org',
@@ -114,11 +150,18 @@ export function PageHead({
             headline: title,
             name: title,
             description,
-            author: {
-              '@type': 'Person',
-              name: config.author
-            },
-            image: socialImageUrl
+            ...(datePublished && { datePublished }),
+            ...(dateModified && { dateModified }),
+            author: [
+              {
+                '@type': 'Person',
+                name: config.author,
+                ...(authorUrl && { url: authorUrl })
+              }
+            ],
+            ...(socialImageUrl && { image: [socialImageUrl] }),
+            ...(articleSection && { articleSection }),
+            ...(articleTags?.length && { keywords: articleTags.join(', ') })
           })}
         </script>
       )}
