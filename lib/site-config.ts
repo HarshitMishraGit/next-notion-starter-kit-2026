@@ -23,6 +23,7 @@ export interface SiteConfig {
   defaultPageCoverPosition?: number | null
 
   isPreviewImageSupportEnabled?: boolean
+  isCloudinaryImageCacheEnabled?: boolean
   isTweetEmbedSupportEnabled?: boolean
   isRedisEnabled?: boolean
   isSearchEnabled?: boolean

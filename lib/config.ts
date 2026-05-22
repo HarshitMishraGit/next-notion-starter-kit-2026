@@ -7,6 +7,7 @@
 import { parsePageId } from 'notion-utils'
 import { type PostHogConfig } from 'posthog-js'
 
+import { isCloudinaryEnvConfigured } from './cloudinary-url'
 import {
   getEnv,
   getRequiredSiteConfig,
@@ -90,6 +91,11 @@ export const isPreviewImageSupportEnabled: boolean = getSiteConfig(
   'isPreviewImageSupportEnabled',
   false
 )
+
+// Optional whether or not to upload Notion images to Cloudinary
+export const isCloudinaryImageCacheEnabled: boolean =
+  getSiteConfig<boolean, boolean>('isCloudinaryImageCacheEnabled', false) &&
+  isCloudinaryEnvConfigured()
 
 // Optional whether or not to include the Notion ID in page URLs or just use slugs
 export const includeNotionIdInUrls: boolean = getSiteConfig(

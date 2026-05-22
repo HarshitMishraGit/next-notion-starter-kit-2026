@@ -33,6 +33,9 @@ export default siteConfig({
   // whether or not to enable support for LQIP preview images (optional)
   isPreviewImageSupportEnabled: true,
 
+  // upload Notion-hosted images to Cloudinary (requires CLOUDINARY_* env vars)
+  isCloudinaryImageCacheEnabled: true,
+
   // whether or not redis is enabled for caching generated preview images (optional)
   // NOTE: if you enable redis, you need to set the `REDIS_HOST` and `REDIS_PASSWORD`
   // environment variables. see the readme for more info

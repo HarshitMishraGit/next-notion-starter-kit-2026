@@ -7,14 +7,16 @@ import { mergeRecordMaps } from 'notion-utils'
 import pMap from 'p-map'
 import pMemoize from 'p-memoize'
 
+import { localizeRecordMapImages } from './cloudinary-images'
 import {
+  isCloudinaryImageCacheEnabled,
   isPreviewImageSupportEnabled,
   navigationLinks,
   navigationStyle
 } from './config'
 import { getTweetsMap } from './get-tweets'
-import { notion } from './notion-api'
 import { normalizeSearchResults } from './normalize-search-results'
+import { notion } from './notion-api'
 import { getPreviewImageMap } from './preview-images'
 
 const getNavigationLinkPages = pMemoize(
@@ -59,6 +61,10 @@ export async function getPage(pageId: string): Promise<ExtendedRecordMap> {
         recordMap
       )
     }
+  }
+
+  if (isCloudinaryImageCacheEnabled) {
+    recordMap = await localizeRecordMapImages(recordMap)
   }
 
   if (isPreviewImageSupportEnabled) {
