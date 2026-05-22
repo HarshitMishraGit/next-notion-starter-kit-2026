@@ -14,6 +14,7 @@ import {
 } from './config'
 import { getTweetsMap } from './get-tweets'
 import { notion } from './notion-api'
+import { normalizeSearchResults } from './normalize-search-results'
 import { getPreviewImageMap } from './preview-images'
 
 const getNavigationLinkPages = pMemoize(
@@ -71,5 +72,6 @@ export async function getPage(pageId: string): Promise<ExtendedRecordMap> {
 }
 
 export async function search(params: SearchParams): Promise<SearchResults> {
-  return notion.search(params)
+  const results = await notion.search(params)
+  return normalizeSearchResults(results)
 }
