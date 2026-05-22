@@ -16,14 +16,8 @@ import {
 } from './config'
 import { getTweetsMap } from './get-tweets'
 import { normalizeSearchResults } from './normalize-search-results'
-import { notion } from './notion-api'
+import { notion, notionWithRetry } from './notion-api'
 import { getPreviewImageMap } from './preview-images'
-
-const notionRetryOptions = {
-  retry: 5,
-  retryDelay: 2000,
-  retryStatusCodes: [408, 409, 413, 429, 500, 502, 503, 504]
-}
 
 const getNavigationLinkPages = pMemoize(
   async (): Promise<ExtendedRecordMap[]> => {
@@ -34,14 +28,15 @@ const getNavigationLinkPages = pMemoize(
     if (navigationStyle !== 'default' && navigationLinkPageIds.length) {
       return pMap(
         navigationLinkPageIds,
-        async (navigationLinkPageId) =>
-          notion.getPage(navigationLinkPageId, {
-            chunkLimit: 1,
-            fetchMissingBlocks: false,
-            fetchCollections: false,
-            signFileUrls: false,
-            ofetchOptions: notionRetryOptions
-          }),
+        (navigationLinkPageId) =>
+          notionWithRetry(() =>
+            notion.getPage(navigationLinkPageId, {
+              chunkLimit: 1,
+              fetchMissingBlocks: false,
+              fetchCollections: false,
+              signFileUrls: false
+            })
+          ),
         {
           concurrency: 2
         }
@@ -53,9 +48,7 @@ const getNavigationLinkPages = pMemoize(
 )
 
 export async function getPage(pageId: string): Promise<ExtendedRecordMap> {
-  let recordMap = await notion.getPage(pageId, {
-    ofetchOptions: notionRetryOptions
-  })
+  let recordMap = await notionWithRetry(() => notion.getPage(pageId))
 
   if (navigationStyle !== 'default') {
     // ensure that any pages linked to in the custom navigation header have

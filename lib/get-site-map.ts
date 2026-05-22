@@ -10,7 +10,7 @@ import type * as types from './types'
 import * as config from './config'
 // import { includeNotionIdInUrls } from './config'
 import { getCanonicalPageId } from './get-canonical-page-id'
-import { notion } from './notion-api'
+import { notion, notionWithRetry } from './notion-api'
 
 // const uuid = !!includeNotionIdInUrls
 const uuid = true // so that pages with same title have different URLs
@@ -33,15 +33,7 @@ const getAllPages = pMemoize(getAllPagesImpl, {
 
 const getPage = async (pageId: string, opts?: any) => {
   console.log('\nnotion getPage', uuidToId(pageId))
-  return notion.getPage(pageId, {
-    ofetchOptions: {
-      timeout: 30_000,
-      retry: 5,
-      retryDelay: 2000,
-      retryStatusCodes: [408, 409, 413, 429, 500, 502, 503, 504]
-    },
-    ...opts
-  })
+  return notionWithRetry(() => notion.getPage(pageId, opts))
 }
 
 async function getAllPagesImpl(
