@@ -38,6 +38,12 @@
   margin-bottom: 1em;
 }
 
+.breadcrumbs{
+  overflow: scroll;
+}
+.breadcrumbs::-webkit-scrollbar {
+  display: none;
+}
 .notion-asset-wrapper-video > div,
 .notion-asset-wrapper-video video {
   width: 100% !important;
