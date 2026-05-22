@@ -11,6 +11,7 @@ export function PageHead({
   pageId,
   image,
   url,
+  isHomePage,
   isArticle,
   articleTags,
   articleSection,
@@ -21,6 +22,7 @@ export function PageHead({
   description?: string
   image?: string
   url?: string
+  isHomePage?: boolean
   isArticle?: boolean
   articleTags?: string[]
   articleSection?: string
@@ -164,6 +166,42 @@ export function PageHead({
             ...(articleTags?.length && { keywords: articleTags.join(', ') })
           })}
         </script>
+      )}
+
+      {/* Structured data — Person + WebSite schema for the homepage */}
+      {isHomePage && (
+        <>
+          <script type='application/ld+json'>
+            {JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Person',
+              '@id': `${config.host}/#person`,
+              name: config.author,
+              url: config.host,
+              description: config.description,
+              sameAs: [
+                config.github && `https://github.com/${config.github}`,
+                config.linkedin &&
+                  `https://www.linkedin.com/in/${config.linkedin}`,
+                config.twitter && `https://twitter.com/${config.twitter}`,
+                config.youtube && `https://www.youtube.com/${config.youtube}`,
+                config.mastodon
+              ].filter(Boolean)
+            })}
+          </script>
+
+          <script type='application/ld+json'>
+            {JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              '@id': `${config.host}/#website`,
+              url: config.host,
+              name: site?.name,
+              description: config.description,
+              author: { '@id': `${config.host}/#person` }
+            })}
+          </script>
+        </>
       )}
     </Head>
   )

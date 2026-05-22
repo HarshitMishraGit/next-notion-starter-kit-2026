@@ -31,28 +31,28 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   }
 }
 
-const createSitemap = (siteMap: SiteMap) =>
-  `<?xml version="1.0" encoding="UTF-8"?>
+const createSitemap = (siteMap: SiteMap) => {
+  const lastmod = new Date().toISOString()
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
   <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-      <loc>${host}</loc>
-    </url>
-
-    <url>
       <loc>${host}/</loc>
+      <lastmod>${lastmod}</lastmod>
+      <priority>1.0</priority>
     </url>
 
     ${Object.keys(siteMap.canonicalPageMap)
       .map((canonicalPagePath) =>
-        `
-          <url>
-            <loc>${host}/${canonicalPagePath}</loc>
-          </url>
-        `.trim()
+        `<url>
+        <loc>${host}/${canonicalPagePath}</loc>
+        <lastmod>${lastmod}</lastmod>
+        <priority>0.8</priority>
+      </url>`.trim()
       )
-      .join('')}
-  </urlset>
-`
+      .join('\n    ')}
+  </urlset>`
+}
 
 export default function noop() {
   return null

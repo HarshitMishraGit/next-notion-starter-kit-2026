@@ -329,6 +329,7 @@ export function NotionPage({
         description={socialDescription}
         image={socialImage}
         url={canonicalPageUrl}
+        isHomePage={isHomePage}
         isArticle={isArticle}
         articleTags={articleTags}
         articleSection={articleSection}
