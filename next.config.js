@@ -3,6 +3,11 @@
 
 export default {
   staticPageGenerationTimeout: 300,
+  experimental: {
+    staticGenerationRetryCount: 5,
+    staticGenerationMaxConcurrency: 2,
+    staticGenerationMinPagesPerWorker: 25,
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'www.notion.so' },
