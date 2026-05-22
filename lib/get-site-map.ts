@@ -34,8 +34,11 @@ const getAllPages = pMemoize(getAllPagesImpl, {
 const getPage = async (pageId: string, opts?: any) => {
   console.log('\nnotion getPage', uuidToId(pageId))
   return notion.getPage(pageId, {
-    kyOptions: {
-      timeout: 30_000
+    ofetchOptions: {
+      timeout: 30_000,
+      retry: 5,
+      retryDelay: 2000,
+      retryStatusCodes: [408, 409, 413, 429, 500, 502, 503, 504]
     },
     ...opts
   })
@@ -55,6 +58,7 @@ async function getAllPagesImpl(
     rootNotionSpaceId,
     getPage,
     {
+      concurrency: 2,
       maxDepth
     }
   )

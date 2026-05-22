@@ -19,6 +19,12 @@ import { normalizeSearchResults } from './normalize-search-results'
 import { notion } from './notion-api'
 import { getPreviewImageMap } from './preview-images'
 
+const notionRetryOptions = {
+  retry: 5,
+  retryDelay: 2000,
+  retryStatusCodes: [408, 409, 413, 429, 500, 502, 503, 504]
+}
+
 const getNavigationLinkPages = pMemoize(
   async (): Promise<ExtendedRecordMap[]> => {
     const navigationLinkPageIds = (navigationLinks || [])
@@ -33,10 +39,11 @@ const getNavigationLinkPages = pMemoize(
             chunkLimit: 1,
             fetchMissingBlocks: false,
             fetchCollections: false,
-            signFileUrls: false
+            signFileUrls: false,
+            ofetchOptions: notionRetryOptions
           }),
         {
-          concurrency: 4
+          concurrency: 2
         }
       )
     }
@@ -46,7 +53,9 @@ const getNavigationLinkPages = pMemoize(
 )
 
 export async function getPage(pageId: string): Promise<ExtendedRecordMap> {
-  let recordMap = await notion.getPage(pageId)
+  let recordMap = await notion.getPage(pageId, {
+    ofetchOptions: notionRetryOptions
+  })
 
   if (navigationStyle !== 'default') {
     // ensure that any pages linked to in the custom navigation header have
