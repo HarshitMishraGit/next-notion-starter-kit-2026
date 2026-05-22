@@ -18,6 +18,7 @@ import {
   isCloudinaryConfigured,
   isCloudinaryUrl
 } from './cloudinary-server'
+import { domain } from './config'
 import { db } from './db'
 
 type BlockImageTarget = {
@@ -32,19 +33,29 @@ type CloudinaryCacheEntry = {
   notionVersion?: number
 }
 
-function isNotionHostedUrl(url: string): boolean {
-  if (isCloudinaryUrl(url)) {
+function shouldLocalizeImageUrl(url: string): boolean {
+  if (!url || isCloudinaryUrl(url) || url.startsWith('data:')) {
     return false
   }
 
   if (
-    url.startsWith('https://images.unsplash.com') ||
-    url.includes('abs.twimg.com') ||
-    url.includes('pbs.twimg.com')
+    url.startsWith('http://') ||
+    url.startsWith('https://') ||
+    url.startsWith('/images') ||
+    url.startsWith('/image') ||
+    url.startsWith('attachment:')
   ) {
-    return false
+    return true
   }
 
+  return false
+}
+
+function isExternalHttpUrl(url: string): boolean {
+  return url.startsWith('http://') || url.startsWith('https://')
+}
+
+function isNotionFileUrl(url: string): boolean {
   return (
     url.includes('secure.notion-static.com') ||
     url.includes('prod-files-secure') ||
@@ -73,7 +84,11 @@ function getUploadSourceUrl(
 ): string | undefined {
   const signedUrl = recordMap.signed_urls?.[block.id]
 
-  if (signedUrl && isNotionHostedUrl(signedUrl)) {
+  if (rawUrl && isExternalHttpUrl(rawUrl) && !isNotionFileUrl(rawUrl)) {
+    return rawUrl
+  }
+
+  if (signedUrl && shouldLocalizeImageUrl(signedUrl)) {
     return signedUrl
   }
 
@@ -85,7 +100,10 @@ function getUploadSourceUrl(
     return defaultMapImageUrl(rawUrl, block)
   }
 
-  if (rawUrl.startsWith('attachment:') || rawUrl.includes('secure.notion-static.com')) {
+  if (
+    rawUrl.startsWith('attachment:') ||
+    rawUrl.includes('secure.notion-static.com')
+  ) {
     return signedUrl || defaultMapImageUrl(rawUrl, block)
   }
 
@@ -101,7 +119,7 @@ function registerTarget(
 ) {
   const url = getUploadSourceUrl(block, recordMap, rawUrl)
 
-  if (!url || !isNotionHostedUrl(url)) {
+  if (!url || !shouldLocalizeImageUrl(url)) {
     return
   }
 
@@ -240,7 +258,12 @@ async function uploadImageToCloudinary(
   publicId: string,
   target: BlockImageTarget
 ): Promise<string> {
-  const response = await ky.get(sourceUrl)
+  const response = await ky.get(sourceUrl, {
+    headers: {
+      'User-Agent': `Mozilla/5.0 (compatible; harshit-mishra-portfolio/1.0; +https://${domain})`
+    },
+    timeout: 30_000
+  })
   const buffer = Buffer.from(await response.arrayBuffer())
   const contentType = response.headers.get('content-type') || 'image/jpeg'
   const dataUri = `data:${contentType};base64,${buffer.toString('base64')}`
