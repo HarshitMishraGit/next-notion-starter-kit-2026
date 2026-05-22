@@ -3,10 +3,25 @@
 
 export default {
   staticPageGenerationTimeout: 300,
+
+  compiler: {
+    // Strip all console.log/debug/info calls in production builds
+    removeConsole: {
+      exclude: ['error', 'warn']
+    }
+  },
+
   experimental: {
     staticGenerationRetryCount: 5,
     staticGenerationMaxConcurrency: 2,
     staticGenerationMinPagesPerWorker: 25,
+    // Tree-shake large packages that don't ship proper ESM barrel files
+    optimizePackageImports: [
+      'react-notion-x',
+      'notion-utils',
+      'react-use',
+      'posthog-js'
+    ]
   },
   images: {
     remotePatterns: [
